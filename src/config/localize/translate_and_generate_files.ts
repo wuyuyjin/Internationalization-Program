@@ -1,8 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 const {Translate} = require('@google-cloud/translate').v2;
-const deepDiff = require('deep-diff'); // 检测差异
-const LANGUAGE_LOCALE_LIST = require('./language_locale_list'); // 导入语言列表
+const deepDiff = require('deep-diff'); // Detecting differences
+const LANGUAGE_LOCALE_LIST = require('./language_locale_list'); // Importing a language list
 
 interface Change {
   key: string;
@@ -15,43 +15,43 @@ interface Changes {
   removed: Change[];
 }
 
-// 谷歌翻译API key
+// Google Translate API key
 const GOOGLE_CLOUD_TRANSLATE_API_KEY = "AIzaSyCoOOeVKmlRKQPg1dEUQfuOKEKNaKbzUEo";
 
 const translate = new Translate({key: GOOGLE_CLOUD_TRANSLATE_API_KEY});
 
-// 英文文件(主文件)路径
+// Path to the English file (main file)
 const enFilePath = path.join(__dirname, '../../../public/locales/en.json');
-// 主语言文件languageCode
+// Main language code
 const mainLanguageCode = 'en';
-// 英文备份文件路径
+// Path to the English backup file
 const enBackupFilePath = path.join(__dirname, '../../../public/locales/en_backup.json');
 
-// 检查文件是否存在
+// Check if files exist
 if (!fs.existsSync(enFilePath)) {
   console.error(`Error: English file not found at ${enFilePath}`);
-  process.exit(1); // 退出程序
+  process.exit(1); // Exit the program
 }
 if (!fs.existsSync(enBackupFilePath)) {
   console.error(`Error: English backup file not found at ${enBackupFilePath}`);
-  process.exit(1); // 退出程序
+  process.exit(1); // Exit the program
 }
 
-// 正则匹配变量占位符（格式：{{variable}})，国际化变量插值
+// Regex to match variable placeholders (format: {{variable}}), used for i18n variable interpolation
 const variableRegex = /{{[^}]+}}/g;
 
-// 读取 JSON 文件内容
+// Read JSON file content
 function readJson(filePath: string): Record<string, any> {
   if (!fs.existsSync(filePath)) return {};
   return JSON.parse(fs.readFileSync(filePath, 'utf8'));
 }
 
-// 写入 JSON 文件内容
+// Write JSON file content
 function writeJson(filePath: string, content: Record<string, any>): void {
   fs.writeFileSync(filePath, JSON.stringify(content, null, 2));
 }
 
-// 翻译文本并处理占位符
+// Translate text while preserving placeholders
 async function translateTextWithPlaceholders(text: string, targetLanguage: string): Promise<string> {
   const placeholders = text.match(variableRegex) || [];
   const textToTranslate = text.replace(variableRegex, (match: string) => `__PLACEHOLDER_${placeholders.indexOf(match as never)}__`);
@@ -59,7 +59,7 @@ async function translateTextWithPlaceholders(text: string, targetLanguage: strin
   return translatedText.replace(/__PLACEHOLDER_(\d+)__/g, (_: any, index: number) => placeholders[Number(index)]);
 }
 
-// 检测变动
+// Detect changes between new and old content
 function detectChanges(newContent: Record<string, any>, oldContent: Record<string, any>): {
   added: any[],
   modified: any[],
@@ -73,22 +73,21 @@ function detectChanges(newContent: Record<string, any>, oldContent: Record<strin
   };
 
   diffs.forEach((diff: any) => {
-    const key = diff.path.join('.'); // 将路径数组转换为键名
+    const key = diff.path.join('.'); // Convert path array to key name
 
     if (diff.kind === 'N') {
-      changes.added.push({key, value: diff.rhs}); // 新增
+      changes.added.push({key, value: diff.rhs}); // Added
     } else if (diff.kind === 'E') {
-      changes.modified.push({key, value: diff.rhs}); // 修改
+      changes.modified.push({key, value: diff.rhs}); // Modified
     } else if (diff.kind === 'D') {
-      changes.removed.push({key}); // 删除
+      changes.removed.push({key}); // Deleted
     }
   });
-
 
   return changes;
 }
 
-// 同步翻译,并写入到各语言文件，如果全部完成，则更新英文备份文件
+// Synchronize translations and write to language files, update English backup file when complete
 const syncTranslations = async (): Promise<void> => {
   try {
     const enContent = readJson(enFilePath);
@@ -99,7 +98,7 @@ const syncTranslations = async (): Promise<void> => {
       removed: [],
     }
 
-    // 如果备份文件为空，则将所有当前内容视为新增
+    // If backup file is empty, treat all current content as new changes
     if (Object.keys(enBackupContent).length === 0) {
       console.warn(`Warning: English backup file is empty. Treating all current content as new changes.`);
       changes = {
@@ -116,25 +115,24 @@ const syncTranslations = async (): Promise<void> => {
       return
     }
 
-    // 遍历语言列表，生成翻译文件
+    // Iterate through language list to generate translation files
     for (const locale of LANGUAGE_LOCALE_LIST) {
       const {google_language_code} = locale;
-      // 排除主文件语言的更新
+      // Skip updates for the main language file
       if(google_language_code === mainLanguageCode) continue
 
-      // 读取目标语言文件
-      // const targetFilePath = path.join(__dirname, `../../locales/${google_language_code}.json`);
+      // Read target language file
       const targetFilePath = path.join(__dirname, `../../../public/locales/${google_language_code}.json`);
-      // 读取现有内容
+      // Read existing content
       const updatedContent: Record<string, any> = readJson(targetFilePath);
 
-      // 使用 changes 内容更新翻译
+      // Update translations using changes content
       for (const {key, value} of [...changes.added, ...changes.modified]) {
         console.log(`Translating: Key=${key} to ${google_language_code}`);
         updatedContent[key] = await translateTextWithPlaceholders(value, locale.google_language_code);
       }
 
-      // 处理删除的键
+      // Handle deleted keys
       for (const {key} of changes.removed) {
         console.log(`Removing: ${key}`);
         delete updatedContent[key];
@@ -144,7 +142,7 @@ const syncTranslations = async (): Promise<void> => {
       console.log(`Completed translation for ${google_language_code}: ${targetFilePath}`);
     }
 
-    // 所有语言翻译完成后，更新英文备份文件
+    // After all translations are complete, update the English backup file
     writeJson(enBackupFilePath, enContent);
     console.log(`[All Success] All translations completed. English Backup File updated: ${enBackupFilePath}`);
   } catch (error) {

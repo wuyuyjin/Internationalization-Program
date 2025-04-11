@@ -10,20 +10,20 @@ i18n
   .init({
     debug: true,
     backend: {
-      loadPath: '/locales/{{lng}}.json', // 使用模板字符串, 动态加载语言文件，路径是在public文件夹下
+      loadPath: '/locales/{{lng}}.json', // Use template string to dynamically load language files, path is under public folder
     },
     lng: 'en',
     fallbackLng: 'en',
     interpolation: {
       escapeValue: false,
     },
-    saveMissing: true, // 启用缺失键记录
+    saveMissing: true, // Enable missing key logging
     missingKeyHandler: function(lng, ns, key) {
       console.warn(`Missing translation: ${key} in ${lng}`);
     },
   }, (err, t) => {
-    if (err) console.error('i18n初始化失败:', err);
-    else console.log('i18n初始化成功');
+    if (err) console.error('i18n initialization failed:', err);
+    else console.log('i18n initialization successful');
   });
 
 export default i18n;

@@ -61,14 +61,14 @@ const ChangeLanguage = () => {
     }
 
     return (
-        <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">Language</span>
-            <select className="border border-gray-300 rounded-md p-1" onChange={(e) => handleChangeLanguage(e)}>
+        <div>
+            <span>Language</span>
+            <select onChange={(e) => handleChangeLanguage(e)}>
                 {
                     languageKeys.map((item, index) => {
                         return (
                             <option key={index} value={item.code}>{item.name}</option>
-                        ) 
+                        )
                     })
                 }
             </select>

@@ -32,26 +32,27 @@ pnpm install i18next react-i18next i18next-http-backend i18next-browser-language
 ```
 
 ## 📂Project Structure
+```plaintext
 translationScripts/
 ├── public/
-│   └── locales/             # Language resource files
-│       ├── en.json          # English translation file
-│       ├── en_backup.json   # English backup empty translation file
-│       └── ...              # Other language files
+│   └── locales/ # Language resource files
+│       ├── en.json # English translation file
+│       ├── en_backup.json # English backup empty translation file
+│       └── ... # Other language files
 ├── src/
-│   ├── config/              # Configuration files
-│   │   └── localize/        # Localization configuration
-│   │       ├── language_locale_list.ts  # Language locale list
-│   │       └── translate_and_generate_files.ts  # Translation file generator
-│   ├── i18n/                # i18n configuration
-│   │   └── index.ts         # i18next initialization
-│   ├── App.tsx              # Main application component
-│   └── main.tsx             # Application entry
-│   └── ChangeLanguage.tsx             # Language drop-down box
-├── package.json             # Project dependencies
-├── tsconfig.json            # TypeScript configuration
-└── vite.config.ts           # Vite configuration
-
+│   ├── config/ # Configuration files
+│   │   └── localize/ # Localization configuration
+│   │       ├── language_locale_list.ts # Language locale list
+│   │       └── translate_and_generate_files.ts # Translation file generator
+│   ├── i18n/ # i18n configuration
+│   │   └── index.ts # i18next initialization
+│   ├── App.tsx # Main application component
+│   └── main.tsx # Application entry
+│   └── ChangeLanguage.tsx # Language drop-down box
+├── package.json # Project dependencies
+├── tsconfig.json # TypeScript configuration
+└── vite.config.ts # Vite configuration
+```
 
 ## 📥Import the dictionary into your react-i18next config
 To dynamically load these resources at runtime, use i18next-http-backend. For example, create an i18n.ts (or .js) file in your project:

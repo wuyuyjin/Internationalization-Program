@@ -10,9 +10,11 @@ function App() {
   useEffect(() => {
     changeLanguage()
   }, [])
+  
   const changeLanguage = (item?: string) => {
     i18n.changeLanguage(item)
   }
+
   return (
     <I18nextProvider i18n={i18n}>
       <ChangeLanguage />

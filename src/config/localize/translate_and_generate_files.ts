@@ -126,10 +126,42 @@ const syncTranslations = async (): Promise<void> => {
       // Read existing content
       const updatedContent: Record<string, any> = readJson(targetFilePath);
 
+      // 递归翻译嵌套对象
+      async function translateNestedObject(obj: any, targetLanguage: string): Promise<any> {
+        if (typeof obj === 'string') {
+          return translateTextWithPlaceholders(obj, targetLanguage);
+        } else if (Array.isArray(obj)) {
+          const newArray = [];
+          for (const item of obj) {
+            newArray.push(await translateNestedObject(item, targetLanguage));
+          }
+          return newArray;
+        } else if (typeof obj === 'object' && obj !== null) {
+          const newObj: Record<string, any> = {};
+          for (const [key, value] of Object.entries(obj)) {
+            newObj[key] = await translateNestedObject(value, targetLanguage);
+          }
+          return newObj;
+        } else {
+          return obj;
+        }
+      }
+      
+      // 修改 update translations 的逻辑
       // Update translations using changes content
       for (const {key, value} of [...changes.added, ...changes.modified]) {
         console.log(`Translating: Key=${key} to ${google_language_code}`);
-        updatedContent[key] = await translateTextWithPlaceholders(value, locale.google_language_code);
+        const translatedValue = await translateNestedObject(value, locale.google_language_code);
+        const keys = key.split('.');
+        let current = updatedContent;
+        for (let i = 0; i < keys.length - 1; i++) {
+          const k = keys[i];
+          if (!current[k]) {
+            current[k] = {};
+          }
+          current = current[k];
+        }
+        current[keys[keys.length - 1]] = translatedValue;
       }
 
       // Handle deleted keys

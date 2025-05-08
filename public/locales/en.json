@@ -1,3 +1,9 @@
 {
-  "languageTitle": "What is your native language?"
+  "languageTitle": {
+    "name": "What is your native language?"
+  },
+  "language": {
+    "name": "What is your native language?"
+  },
+  "value": "Value"
 }
